@@ -8,7 +8,9 @@
 
 - name: named | Configuring the DNS slave server
   ansible.builtin.include_tasks: named-slave.yml
-  when: inventory_hostname in groups.named_slaves
+  when:
+    - groups.named_masters is defined
+    - inventory_hostname in groups.named_slaves
 
 - name: named | Configuring logging
   ansible.builtin.include_tasks: named-log.yml
