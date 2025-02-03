@@ -1,31 +1,81 @@
 ; {{ ansible_managed }}
 
-{% if (item.zone.split('.') | length) == 3 %}
-$ORIGIN {{ (item.zone | ansible.utils.ipaddr('revdns')).split('.')[1:] | join('.') }}
-{% elif (item.zone.split('.') | length) == 2 %}
-$ORIGIN {{ (item.zone | ansible.utils.ipaddr('revdns')).split('.')[2:] | join('.') }}
-{% elif (item.zone.split('.') | length) == 1 %}
-$ORIGIN {{ (item.zone | ansible.utils.ipaddr('revdns')).split('.')[3:] | join('.') }}
+{% if item.prefix == 24 %}
+{%   if item.records | length > 0 %}
+$ORIGIN {{ (item.records[0].address | ansible.utils.ipaddr('revdns')).split('.')[1:] | join('.') }}
+{%   else %}
+$ORIGIN {{ (ansible_default_ipv4.address | ansible.utils.ipaddr('revdns')).split('.')[1:] | join('.') }}
+{%   endif %}
+{% elif item.prefix == 16 %}
+{%   if item.records | length > 0 %}
+$ORIGIN {{ (item.records[0].address | ansible.utils.ipaddr('revdns')).split('.')[2:] | join('.') }}
+{%   else %}
+$ORIGIN {{ (ansible_default_ipv4.address | ansible.utils.ipaddr('revdns')).split('.')[2:] | join('.') }}
+{%   endif %}
+{% elif item.prefix == 8 %}
+{%   if item.records | length > 0 %}
+$ORIGIN {{ (item.records[0].address | ansible.utils.ipaddr('revdns')).split('.')[3:] | join('.') }}
+{%   else %}
+$ORIGIN {{ (ansible_default_ipv4.address | ansible.utils.ipaddr('revdns')).split('.')[3:] | join('.') }}
+{%   endif %}
 {% endif %}
-$TTL	{{ bind_all_zone_ttl }}
+$TTL	{{ named_all_zone_ttl }}
 
-@	IN	SOA	{{ bind_all_soa_pri }}. {{ bind_all_zone_hostmaster }}. (
-			{{ bind_all_zone_serial }}
-			{{ bind_all_zone_refresh }}
-			{{ bind_all_zone_retry }}
-			{{ bind_all_zone_expire }}
-			{{ bind_all_zone_neg_ttl }} )
+@	IN	SOA	{{ hostvars[groups.named_masters[0]]['ansible_hostname'] }}.{{ named_pri_domain_name }}. {{ named_all_zone_hostmaster }}. (
+			{{ named_all_zone_serial }}
+			{{ named_all_zone_refresh }}
+			{{ named_all_zone_retry }}
+			{{ named_all_zone_expire }}
+			{{ named_all_zone_neg_ttl }} )
 ;
 
-{% if bind_nameservers_list %}
-{%   for bind_nameserver in groups.all %}
-@	IN	NS	{{ hostvars[bind_nameserver]['ansible_hostname'] }}.{{ bind_pri_domain_name }}.
+{% if groups.all | type_debug == 'list' %}
+{%   for named_nameserver in groups.all %}
+@	IN	NS	{{ hostvars[named_nameserver]['ansible_hostname'] }}.{{ named_pri_domain_name }}.
 {%   endfor %}
 {% else %}
-@	IN	NS	{{ hostvars[groups.bind_masters[0]]['ansible_hostname'] }}.{{ bind_pri_domain_name }}.
+@	IN	NS	{{ hostvars[groups.named_masters[0]]['ansible_hostname'] }}.{{ named_pri_domain_name }}.
 {% endif %}
 
-{% for bind_record in item.records %}
-{{ bind_record.address }}	IN	PTR	{{ bind_record.name }}.
+{% if groups.all | type_debug == 'list' %}
+{%   for named_nameserver in groups.all %}
+{%   if item.prefix == 24 %}
+{{ (hostvars[named_nameserver]['ansible_default_ipv4']['address'] | ansible.utils.ipaddr('revdns')).split('.')[:1] | join('.') }}	IN	PTR	{{ hostvars[named_nameserver]['ansible_hostname'] }}.{{ named_pri_domain_name }}.
+{%   elif item.prefix == 16 %}
+{{ (hostvars[named_nameserver]['ansible_default_ipv4']['address'] | ansible.utils.ipaddr('revdns')).split('.')[:2] | join('.') }}	IN	PTR	{{ hostvars[named_nameserver]['ansible_hostname'] }}.{{ named_pri_domain_name }}.
+{%   elif item.prefix == 8 %}
+{{ (hostvars[named_nameserver]['ansible_default_ipv4']['address'] | ansible.utils.ipaddr('revdns')).split('.')[:3] | join('.') }}	IN	PTR	{{ hostvars[named_nameserver]['ansible_hostname'] }}.{{ named_pri_domain_name }}.
+{%   endif %}
+{%   endfor %}
+{% else %}
+{%   if item.prefix == 24 %}
+{{ (ansible_default_ipv4.address | ansible.utils.ipaddr('revdns')).split('.')[:1] | join('.') }}	IN	PTR	{{ ansible_hostname }}.{{ named_pri_domain_name }}.
+{%   elif item.prefix == 16 %}
+{{ (ansible_default_ipv4.address | ansible.utils.ipaddr('revdns')).split('.')[:2] | join('.') }}	IN	PTR	{{ ansible_hostname }}.{{ named_pri_domain_name }}.
+{%   elif item.prefix == 8 %}
+{{ (ansible_default_ipv4.address | ansible.utils.ipaddr('revdns')).split('.')[:3] | join('.') }}	IN	PTR	{{ ansible_hostname }}.{{ named_pri_domain_name }}.
+{%   endif %}
+{% endif %}
 
-{% endfor %}
+{% if item.prefix == 24 %}
+{%   if item.records | length > 0 %}
+{%     for named_record in item.records %}
+{{ (named_record.address | ansible.utils.ipaddr('revdns')).split('.')[:1] | join('.') }}	IN	PTR	{{ named_record.name }}.{{ item.zone }}.
+
+{%     endfor %}
+{%   endif %}
+{% elif item.prefix == 16 %}
+{%   if item.records | length > 0 %}
+{%     for named_record in item.records %}
+{{ (named_record.address | ansible.utils.ipaddr('revdns')).split('.')[:2] | join('.') }}	IN	PTR	{{ named_record.name }}.{{ item.zone }}.
+
+{%     endfor %}
+{%   endif %}
+{% elif item.prefix == 8 %}
+{%   if item.records | length > 0 %}
+{%     for named_record in item.records %}
+{{ (named_record.address | ansible.utils.ipaddr('revdns')).split('.')[:3] | join('.') }}	IN	PTR	{{ named_record.name }}.{{ item.zone }}.
+
+{%     endfor %}
+{%   endif %}
+{% endif %}

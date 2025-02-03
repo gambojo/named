@@ -1,0 +1,4 @@
+---
+rules:
+  comments: disable
+  comments-indentation: disable

@@ -1,8 +1,5 @@
 ---
-# [ Forward zone options ]
-bind_forward_zones:
+named_forward_zones:
   - zone: "example.com"
-    records:
-      - { name: "@", address: "10.21.20.20", type: "A" }
-      - { name: "ns1", address: "10.21.20.21", type: "A" }
-      - { name: "ns2", address: "10.21.20.32", type: "A" }
+    prefix: 24
+    records: []

@@ -1,53 +1,15 @@
 ---
-- name: MAIN | Check ensure bind_masters groups in inventory
-  ansible.builtin.fail:
-    msg: "It is required to define a group of bind_masters in the hosts file"
-  when: groups.bind_masters is not defined
-  delegate_to: localhost
+- name: named | Preparation before deploy named server
+  ansible.builtin.include_tasks: named-prepare.yml
 
-- name: MAIN | Logical block
-  when: |
-    inventory_hostname in bind_master_group or
-    inventory_hostname in bind_slave_group
-  block:
-    - name: MAIN | Install BIND server
-      ansible.builtin.apt:
-        name: bind9
-        state: present
+- name: named | Configuring the DNS master server
+  ansible.builtin.include_tasks: named-master.yml
+  when: inventory_hostname in groups.named_masters
 
-    - name: MAIN | Started BIND server
-      ansible.builtin.service:
-        name: named
-        enabled: true
-        state: started
+- name: named | Configuring the DNS slave server
+  ansible.builtin.include_tasks: named-slave.yml
+  when: inventory_hostname in groups.named_slaves
 
-    - name: MAIN | Check ensure including configuration files
-      ansible.builtin.lineinfile:
-        path: "{{ bind_conf }}"
-        line: 'include "{{ bind_conf }}.{{ item }}";'
-        state: present
-      loop:
-        - options
-        - local
-
-    - name: MAIN | Check ensure {{ bind_work_dir }}
-      ansible.builtin.file:
-        path: "{{ bind_work_dir }}"
-        state: directory
-        owner: bind
-        mode: '0755'
-
-- name: MAIN | Configuring the DNS master server
-  ansible.builtin.include_tasks: master.yml
-  when: inventory_hostname in bind_master_group
-
-- name: MAIN | Configuring the DNS slave server
-  ansible.builtin.include_tasks: slave.yml
-  when: inventory_hostname in bind_slave_group
-
-- name: MAIN | Configuring logging
-  ansible.builtin.include_tasks: log.yml
-  when: |
-    bind_self_log and
-    (inventory_hostname in bind_master_group or
-    inventory_hostname in bind_slave_group)
+- name: named | Configuring logging
+  ansible.builtin.include_tasks: named-log.yml
+  when: named_self_log

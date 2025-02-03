@@ -1,0 +1,39 @@
+---
+- name: named-prepare | Check ensure named_masters groups in inventory
+  ansible.builtin.fail:
+    msg: "It is required to define a group of named_masters in the hosts file"
+  when: groups.named_masters is not defined
+  delegate_to: localhost
+
+- name: named-prepare | Set serial number from timestamp
+  ansible.builtin.set_fact:
+    named_all_zone_serial: "{{ ansible_date_time.year[-2:] +
+                                  ansible_date_time.month +
+                                    ansible_date_time.day +
+                                      ansible_date_time.hour +
+                                        ansible_date_time.minute }}"
+
+- name: named-prepare | Install named server
+  ansible.builtin.apt:
+    name: "{{ _named_packages }}"
+    update_cache: true
+  vars:
+    _named_packages:
+      - python3-netaddr
+      - "{{ named_package }}"
+
+- name: named-prepare | Started named server
+  ansible.builtin.service:
+    name: "{{ named_service }}"
+    state: started
+
+- name: named-prepare | Check ensure including configuration files
+  ansible.builtin.lineinfile:
+    path: "{{ named_conf }}"
+    line: 'include "{{ named_conf }}.{{ item }}";'
+    owner: root
+    group: bind
+    mode: '0644'
+  loop:
+    - options
+    - local

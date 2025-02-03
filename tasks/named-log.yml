@@ -1,0 +1,40 @@
+---
+- name: named-log | Check ensure including configuration file for logging
+  ansible.builtin.lineinfile:
+    path: "{{ named_conf }}"
+    line: 'include "{{ named_conf }}.logging";'
+  notify: RESTART NAMED
+
+- name: named-log | Check ensure {{ named_log_dir }}
+  ansible.builtin.file:
+    path: "{{ named_log_dir }}"
+    state: directory
+    owner: bind
+    group: bind
+    mode: '0755'
+
+- name: named-log | Check ensure {{ named_log }}
+  ansible.builtin.file:
+    path: "{{ named_log }}"
+    state: touch
+    owner: bind
+    group: bind
+    mode: '0644'
+  changed_when: false
+
+- name: named-log | Create link to /var/log/named.log
+  ansible.builtin.file:
+    src: "{{ named_log }}"
+    dest: "/var/log/named.log"
+    state: link
+    owner: bind
+    group: bind
+
+- name: named-log | Setting up a log file
+  ansible.builtin.template:
+    src: "log/named.conf.logging.j2"
+    dest: "{{ named_conf }}.logging"
+    owner: root
+    group: root
+    mode: "0644"
+  notify: RESTART NAMED

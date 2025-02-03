@@ -1,54 +1,93 @@
 # {{ ansible_managed }}
 
 # Forward zones
-{% for item in bind_forward_zones %}
+{% for item in named_forward_zones %}
 zone "{{ item.zone }}" {
   type slave;
   masters {
-{%   if (groups.bind_masters | length) == 1 %}
-  {{ hostvars[groups.bind_masters[0]]['ansible_default_ipv4']['address'] }};
-{%   elif (groups.bind_masters | length) > 1 %}
-{%     for bind_master in groups.bind_masters %}
-  {{ hostvars[bind_master[0]]['ansible_default_ipv4']['address'] }};
+{%   if groups.named_masters | type_debug == 'list' %}
+{%     for named_master in groups.named_masters %}
+  {{ hostvars[named_master]['ansible_default_ipv4']['address'] }};
 {%     endfor %}
-{% endif %}
+{%   else %}
+  {{ hostvars[groups.named_masters[0]]['ansible_default_ipv4']['address'] }};
+{%   endif %}
   };
-  file "{{ bind_cache_dir }}/db.{{ item.zone }}";
+  file "{{ named_cache_dir }}/db.{{ item.zone }}";
 };
 
 {% endfor %}
 
 # Reverse zones
-{% for item in bind_reverse_zones %}
-{%   if (item.zone.split('.') | length) == 3 %}
-zone "{{ (item.zone | ansible.utils.ipaddr('revdns')).split('.')[1:] | join('.') }}" {
+{% for item in named_forward_zones %}
+{%   if item.prefix == 24 %}
+{%     if item.records | length > 0 %}
+zone "{{ (item.records[0].address | ansible.utils.ipaddr('revdns')).split('.')[1:] | join('.') }}" {
+{%     elif item.records | length == 0 %}
+zone "{{ (ansible_default_ipv4.address | ansible.utils.ipaddr('revdns')).split('.')[1:] | join('.') }}" {
+{%     endif %}
   type slave;
   masters {
-{%     for bind_master in groups.bind_masters %}
-    {{ bind_master }};
-{%     endfor %}
+{%     if groups.named_masters | type_debug == 'list' %}
+{%       for named_master in groups.named_masters %}
+  {{ hostvars[named_master]['ansible_default_ipv4']['address'] }};
+{%       endfor %}
+{%     else %}
+  {{ hostvars[groups.named_masters[0]]['ansible_default_ipv4']['address'] }};
+{%     endif %}
   };
-  file "{{ bind_cache_dir }}/db.{{ (item.zone | ansible.utils.ipaddr('revdns')).split('.')[1:] | join('.') }}";
+
+{%     if item.records | length > 0 %}
+  file "{{ named_cache_dir }}/db.{{ (item.records[0].address | ansible.utils.ipaddr('revdns')).split('.')[1:] | join('.') }}";
+{%     elif item.records | length == 0 %}
+  file "{{ named_cache_dir }}/db.{{ (ansible_default_ipv4.address | ansible.utils.ipaddr('revdns')).split('.')[1:] | join('.') }}";
+{%     endif %}
 };
-{%   elif (item.zone.split('.') | length) == 2 %}
-zone "{{ (item.zone | ansible.utils.ipaddr('revdns')).split('.')[2:] | join('.') }}" {
+{%   elif item.prefix == 16 %}
+{%     if item.records | length > 0 %}
+zone "{{ (item.records[0].address | ansible.utils.ipaddr('revdns')).split('.')[2:] | join('.') }}" {
+{%     elif item.records | length == 0 %}
+zone "{{ (ansible_default_ipv4.address | ansible.utils.ipaddr('revdns')).split('.')[2:] | join('.') }}" {
+{%     endif %}
   type slave;
   masters {
-{%     for bind_master in groups.bind_masters %}
-    {{ bind_master }};
-{%     endfor %}
+{%     if groups.named_masters | type_debug == 'list' %}
+{%       for named_master in groups.named_masters %}
+  {{ hostvars[named_master]['ansible_default_ipv4']['address'] }};
+{%       endfor %}
+{%     else %}
+  {{ hostvars[groups.named_masters[0]]['ansible_default_ipv4']['address'] }};
+{%     endif %}
   };
-  file "{{ bind_cache_dir }}/db.{{ (item.zone | ansible.utils.ipaddr('revdns')).split('.')[2:] | join('.') }}";
+
+{%     if item.records | length > 0 %}
+  file "{{ named_cache_dir }}/db.{{ (item.records[0].address | ansible.utils.ipaddr('revdns')).split('.')[2:] | join('.') }}";
+{%     elif item.records | length == 0 %}
+  file "{{ named_cache_dir }}/db.{{ (ansible_default_ipv4.address | ansible.utils.ipaddr('revdns')).split('.')[2:] | join('.') }}";
+{%     endif %}
 };
-{%   elif (item.zone.split('.') | length) == 2 %}
-zone "{{ (item.zone | ansible.utils.ipaddr('revdns')).split('.')[3:] | join('.') }}" {
+{%   elif item.prefix == 8 %}
+{%     if item.records | length > 0 %}
+zone "{{ (item.records[0].address | ansible.utils.ipaddr('revdns')).split('.')[3:] | join('.') }}" {
+{%     elif item.records | length == 0 %}
+zone "{{ (ansible_default_ipv4.address | ansible.utils.ipaddr('revdns')).split('.')[3:] | join('.') }}" {
+{%     endif %}
   type slave;
   masters {
-{%     for bind_master in groups.bind_masters %}
-    {{ bind_master }};
-{%     endfor %}
+{%     if groups.named_masters | type_debug == 'list' %}
+{%       for named_master in groups.named_masters %}
+  {{ hostvars[named_master]['ansible_default_ipv4']['address'] }};
+{%       endfor %}
+{%     else %}
+  {{ hostvars[groups.named_masters[0]]['ansible_default_ipv4']['address'] }};
+{%     endif %}
   };
-  file "{{ bind_cache_dir }}/db.{{ (item.zone | ansible.utils.ipaddr('revdns')).split('.')[3:] | join('.') }}";
+
+{%     if item.records | length > 0 %}
+  file "{{ named_cache_dir }}/db.{{ (item.records[0].address | ansible.utils.ipaddr('revdns')).split('.')[3:] | join('.') }}";
+{%     elif item.records | length == 0 %}
+  file "{{ named_cache_dir }}/db.{{ (ansible_default_ipv4.address | ansible.utils.ipaddr('revdns')).split('.')[3:] | join('.') }}";
+{%     endif %}
 };
 {%   endif %}
 

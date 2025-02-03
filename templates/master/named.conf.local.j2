@@ -1,33 +1,51 @@
 # {{ ansible_managed }}
 
 # Forward zones
-{% for item in bind_forward_zones %}
+{% for item in named_forward_zones %}
 zone "{{ item.zone }}" {
   type master;
-  file "{{ bind_zones_dir }}/forward/db.{{ item.zone }}";
+  file "{{ named_zones_dir }}/forward/db.{{ item.zone }}";
   allow-update { none; };
 };
 
 {% endfor %}
 
 # Reverse zones
-{% for item in bind_reverse_zones %}
-{%   if (item.zone.split('.') | length) == 3 %}
-zone "{{ (item.zone | ansible.utils.ipaddr('revdns')).split('.')[1:] | join('.') }}" {
+{% for item in named_forward_zones %}
+{%   if item.prefix == 24 %}
+{%     if item.records | length > 0 %}
+zone "{{ (item.records[0].address | ansible.utils.ipaddr('revdns')).split('.')[1:] | join('.') }}" {
   type master;
-  file "{{ bind_zones_dir }}/reverse/db.{{ (item.zone | ansible.utils.ipaddr('revdns')).split('.')[1:] | join('.') }}";
+  file "{{ named_zones_dir }}/reverse/db.{{ (item.records[0].address | ansible.utils.ipaddr('revdns')).split('.')[1:] | join('.') }}";
+{%     elif item.records | length == 0 %}
+zone "{{ (ansible_default_ipv4.address | ansible.utils.ipaddr('revdns')).split('.')[1:] | join('.') }}" {
+  type master;
+  file "{{ named_zones_dir }}/reverse/db.{{ (ansible_default_ipv4.address | ansible.utils.ipaddr('revdns')).split('.')[1:] | join('.') }}";
+{%     endif %}
   allow-update { none; };
 };
-{%   elif (item.zone.split('.') | length) == 2 %}
-zone "{{ (item.zone | ansible.utils.ipaddr('revdns')).split('.')[2:] | join('.') }}" {
+{%   elif item.prefix == 16 %}
+{%     if item.records | length > 0 %}
+zone "{{ (item.records[0].address | ansible.utils.ipaddr('revdns')).split('.')[2:] | join('.') }}" {
   type master;
-  file "{{ bind_zones_dir }}/reverse/db.{{ (item.zone | ansible.utils.ipaddr('revdns')).split('.')[2:] | join('.') }}";
+  file "{{ named_zones_dir }}/reverse/db.{{ (item.records[0].address | ansible.utils.ipaddr('revdns')).split('.')[2:] | join('.') }}";
+{%     elif item.records | length == 0 %}
+zone "{{ (ansible_default_ipv4.address | ansible.utils.ipaddr('revdns')).split('.')[2:] | join('.') }}" {
+  type master;
+  file "{{ named_zones_dir }}/reverse/db.{{ (ansible_default_ipv4.address | ansible.utils.ipaddr('revdns')).split('.')[2:] | join('.') }}";
+{%     endif %}
   allow-update { none; };
 };
-{%   elif (item.zone.split('.') | length) == 1 %}
-zone "{{ (item.zone | ansible.utils.ipaddr('revdns')).split('.')[3:] | join('.') }}" {
+{%   elif item.prefix == 8 %}
+{%     if item.records | length > 0 %}
+zone "{{ (item.records[0].address | ansible.utils.ipaddr('revdns')).split('.')[3:] | join('.') }}" {
   type master;
-  file "{{ bind_zones_dir }}/reverse/db.{{ (item.zone | ansible.utils.ipaddr('revdns')).split('.')[3:] | join('.') }}";
+  file "{{ named_zones_dir }}/reverse/db.{{ (item.records[0].address | ansible.utils.ipaddr('revdns')).split('.')[3:] | join('.') }}";
+{%     elif item.records | length == 0 %}
+zone "{{ (ansible_default_ipv4.address | ansible.utils.ipaddr('revdns')).split('.')[3:] | join('.') }}" {
+  type master;
+  file "{{ named_zones_dir }}/reverse/db.{{ (ansible_default_ipv4.address | ansible.utils.ipaddr('revdns')).split('.')[3:] | join('.') }}";
+{%     endif %}
   allow-update { none; };
 };
 {%   endif %}

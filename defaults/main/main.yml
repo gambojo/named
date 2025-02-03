@@ -1,30 +1,26 @@
 ---
-# [ Main options ]
-bind_conf_dir: "/etc/bind"
-bind_work_dir: "/var/lib/bind"
-bind_cache_dir: "/var/cache/bind"
-bind_zones_dir: "{{ bind_work_dir }}/zones"
-bind_log_dir: "{{ bind_work_dir }}/log"
-bind_conf: "{{ bind_conf_dir }}/named.conf"
-bind_log: "{{ bind_log_dir }}/named.log"
-bind_self_log: true
-bind_log_level: "info"
-bind_pri_domain_name: "example.com"
-bind_all_soa_pri: "{{ hostvars[groups.bind_masters[0]]['ansible_hostname'] }}.{{ bind_pri_domain_name }}"
-bind_forwarders: ["8.8.8.8", "8.8.4.4"]
-bind_nameservers_list: "{% if groups.all | length > 1 %}{{ true }}{% else %}{{ false }}{% endif %}"
-bind_all_zone_hostmaster: "hostmaster.{{ bind_pri_domain_name }}"
-bind_all_zone_ttl: "3600"
-bind_all_zone_refresh: "3600"
-bind_all_zone_retry: "600"
-bind_all_zone_expire: "1209600"
-bind_all_zone_neg_ttl: "600"
-bind_all_zone_serial: "{{ ansible_date_time.year[-2:] +
-                          ansible_date_time.month +
-                          ansible_date_time.day +
-                          ansible_date_time.hour +
-                          ansible_date_time.minute }}"
-
-# [ Secial options ]
-bind_master_group: "{{ groups.bind_masters | default('') }}"
-bind_slave_group: "{{ groups.bind_slaves | default('') }}"
+# Any
+named_service: "named"
+named_pri_domain_name: "example.com"
+named_self_log: true
+named_log_level: "info"
+named_package: bind9
+named_forwarders:
+  - 8.8.8.8
+  - 8.8.4.4
+# Config dirs
+named_conf_dir: "/etc/bind"
+named_work_dir: "/var/lib/bind"
+named_cache_dir: "/var/cache/bind"
+named_zones_dir: "{{ named_work_dir }}/zones"
+named_log_dir: "{{ named_work_dir }}/log"
+# Config files
+named_conf: "{{ named_conf_dir }}/named.conf"
+named_log: "{{ named_log_dir }}/named.log"
+# SOA
+named_all_zone_hostmaster: "hostmaster.{{ named_pri_domain_name }}"
+named_all_zone_ttl: "3600"
+named_all_zone_refresh: "3600"
+named_all_zone_retry: "600"
+named_all_zone_expire: "1209600"
+named_all_zone_neg_ttl: "600"

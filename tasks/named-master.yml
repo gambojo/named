@@ -1,0 +1,94 @@
+---
+- name: named-master | Create directory for zones
+  ansible.builtin.file:
+    path: "{{ named_zones_dir }}/{{ item }}"
+    state: directory
+    owner: bind
+    group: bind
+    mode: '0755'
+  loop:
+    - forward
+    - reverse
+
+- name: named-master | Setting up the options file
+  ansible.builtin.template:
+    src: "master/named.conf.options.j2"
+    dest: "{{ named_conf }}.options"
+    owner: root
+    group: root
+    mode: "0644"
+  notify: RESTART NAMED
+
+- name: named-master | Setting up a zone file
+  ansible.builtin.template:
+    src: "master/named.conf.local.j2"
+    dest: "{{ named_conf }}.local"
+    owner: root
+    group: root
+    mode: "0644"
+  notify: RESTART NAMED
+
+- name: named-master | Check diff in forward zones
+  ansible.builtin.template:
+    src: "master/__forward_zone_check.j2"
+    dest: "{{ named_cache_dir }}/__dump.db"
+    owner: bind
+    group: bind
+    mode: "0644"
+  loop: "{{ named_forward_zones }}"
+  register: __update_forward_zones
+
+- name: named-master | Update forward zones # noqa no-handler
+  ansible.builtin.template:
+    src: "master/forward_zone.j2"
+    dest: "{{ named_zones_dir }}/forward/db.{{ item.zone }}"
+    owner: bind
+    group: bind
+    mode: "0644"
+  loop: "{{ named_forward_zones }}"
+  when: __update_forward_zones is changed
+  notify:
+    - CHECK CONFIGURATION NAMED
+    - RECONFIGURATION NAMED
+    - RELOAD NAMED
+    - RESTART NAMED
+
+- name: named-master | Update reverse zones # noqa no-handler
+  ansible.builtin.template:
+    src: "master/reverse_zone.j2"
+    dest: "{{ named_zones_dir }}/reverse/db.{%
+              if item.prefix == 24 and item.records | length > 0 %}{{
+                (item.records[0].address |
+                  ansible.utils.ipaddr('revdns')).split('.')[1:] |
+                    join('.') }}{%
+              elif item.prefix == 24 and item.records | length == 0 %}{{
+                (ansible_default_ipv4.address |
+                  ansible.utils.ipaddr('revdns')).split('.')[1:] |
+                    join('.') }}{%
+              elif item.prefix == 16 and item.records | length > 0 %}{{
+                (item.records[0].address |
+                  ansible.utils.ipaddr('revdns')).split('.')[2:] |
+                    join('.') }}{%
+              elif item.prefix == 16 and item.records | length == 0 %}{{
+                (ansible_default_ipv4.address |
+                  ansible.utils.ipaddr('revdns')).split('.')[2:] |
+                    join('.') }}{%
+              elif item.prefix == 8 and item.records | length > 0 %}{{
+                (item.records[0].address |
+                  ansible.utils.ipaddr('revdns')).split('.')[3:] |
+                    join('.') }}{%
+              elif item.prefix == 8 and item.records | length == 0 %}{{
+                (ansible_default_ipv4.address |
+                  ansible.utils.ipaddr('revdns')).split('.')[3:] |
+                    join('.') }}{%
+              endif %}"
+    owner: bind
+    group: bind
+    mode: "0644"
+  loop: "{{ named_forward_zones }}"
+  when: __update_forward_zones is changed
+  notify:
+    - CHECK CONFIGURATION NAMED
+    - RECONFIGURATION NAMED
+    - RELOAD NAMED
+    - RESTART NAMED

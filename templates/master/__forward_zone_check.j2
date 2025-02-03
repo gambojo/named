@@ -4,7 +4,7 @@ $ORIGIN {{ item.zone }}.
 $TTL	{{ named_all_zone_ttl }}
 
 @	IN	SOA	{{ hostvars[groups.named_masters[0]]['ansible_hostname'] }}.{{ named_pri_domain_name }}. {{ named_all_zone_hostmaster }}. (
-			{{ named_all_zone_serial }}
+			7777777
 			{{ named_all_zone_refresh }}
 			{{ named_all_zone_retry }}
 			{{ named_all_zone_expire }}

@@ -2,8 +2,8 @@
 
 logging {
         channel named_log {
-                file "{{ bind_log }}" versions 10 size 20m;
-                severity {{ bind_log_level }};
+                file "{{ named_log }}" versions 10 size 20m;
+                severity {{ named_log_level }};
                 print-category yes;
                 print-severity yes;
                 print-time yes;
