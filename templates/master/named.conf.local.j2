@@ -1,0 +1,35 @@
+# {{ ansible_managed }}
+
+# Forward zones
+{% for item in bind_forward_zones %}
+zone "{{ item.zone }}" {
+  type master;
+  file "{{ bind_zones_dir }}/forward/db.{{ item.zone }}";
+  allow-update { none; };
+};
+
+{% endfor %}
+
+# Reverse zones
+{% for item in bind_reverse_zones %}
+{%   if (item.zone.split('.') | length) == 3 %}
+zone "{{ (item.zone | ansible.utils.ipaddr('revdns')).split('.')[1:] | join('.') }}" {
+  type master;
+  file "{{ bind_zones_dir }}/reverse/db.{{ (item.zone | ansible.utils.ipaddr('revdns')).split('.')[1:] | join('.') }}";
+  allow-update { none; };
+};
+{%   elif (item.zone.split('.') | length) == 2 %}
+zone "{{ (item.zone | ansible.utils.ipaddr('revdns')).split('.')[2:] | join('.') }}" {
+  type master;
+  file "{{ bind_zones_dir }}/reverse/db.{{ (item.zone | ansible.utils.ipaddr('revdns')).split('.')[2:] | join('.') }}";
+  allow-update { none; };
+};
+{%   elif (item.zone.split('.') | length) == 1 %}
+zone "{{ (item.zone | ansible.utils.ipaddr('revdns')).split('.')[3:] | join('.') }}" {
+  type master;
+  file "{{ bind_zones_dir }}/reverse/db.{{ (item.zone | ansible.utils.ipaddr('revdns')).split('.')[3:] | join('.') }}";
+  allow-update { none; };
+};
+{%   endif %}
+
+{% endfor %}

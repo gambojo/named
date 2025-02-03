@@ -1,0 +1,3 @@
+---
+- name: Restart BIND
+  ansible.builtin.include_tasks: restart.yml

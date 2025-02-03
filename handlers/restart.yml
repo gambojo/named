@@ -1,0 +1,14 @@
+---
+- name: RESTART | Check BIND Configuration
+  ansible.builtin.command: named-checkconf {{ bind_conf }}
+
+- name: RESTART | BIND Reconfiguration
+  ansible.builtin.command: rndc reconfig
+
+- name: RESTART | BIND Reload
+  ansible.builtin.command: rndc reload
+
+- name: RESTART | BIND Restart
+  ansible.builtin.service:
+    name: named
+    state: restarted

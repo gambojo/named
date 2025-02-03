@@ -1,0 +1,25 @@
+; {{ ansible_managed }}
+
+$ORIGIN {{ item.zone }}.
+$TTL	{{ bind_all_zone_ttl }}
+
+@	IN	SOA	{{ bind_all_soa_pri }}. {{ bind_all_zone_hostmaster }}. (
+			{{ bind_all_zone_serial }}
+			{{ bind_all_zone_refresh }}
+			{{ bind_all_zone_retry }}
+			{{ bind_all_zone_expire }}
+			{{ bind_all_zone_neg_ttl }} )
+;
+
+{% if bind_nameservers_list %}
+{%   for bind_nameserver in groups.all %}
+@	IN	NS	{{ hostvars[bind_nameserver]['ansible_hostname'] }}.{{ bind_pri_domain_name }}.
+{%   endfor %}
+{% else %}
+@	IN	NS	{{ hostvars[groups.bind_masters[0]]['ansible_hostname'] }}.{{ bind_pri_domain_name }}.
+{% endif %}
+
+{% for bind_record in item.records %}
+{{ bind_record.name }}	IN	{{ bind_record.type }}{% if bind_record.address is defined %}	{{ bind_record.address }}{% endif %}
+
+{% endfor %}

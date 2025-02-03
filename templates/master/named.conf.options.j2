@@ -1,0 +1,14 @@
+# {{ ansible_managed }}
+
+options {
+	directory "{{ bind_cache_dir }}";
+	recursion yes;
+	dnssec-validation no;
+	allow-update { none; };
+
+	forwarders {
+{% for bind_forwarder in bind_forwarders %}
+		{{ bind_forwarder }};
+{% endfor %}
+	};
+};

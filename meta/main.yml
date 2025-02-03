@@ -1,0 +1,22 @@
+---
+dependencies: []
+
+collections:
+  - "ansible.utils"
+
+galaxy_info:
+  role_name: named
+  namespace: services
+  author: "Agamov Gamid"
+  description: DNS server for Debian
+  license: "None"
+  min_ansible_version: '2.10'
+  platforms:
+    - name: Debian
+      versions:
+        - "bullseye"
+        - "bookworm"
+  galaxy_tags:
+    - bind
+    - dns
+    - named

@@ -1,0 +1,18 @@
+---
+- name: SLAVE | Setting up the options file
+  ansible.builtin.template:
+    src: "slave/named.conf.options.j2"
+    dest: "{{ bind_conf }}.options"
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Restart BIND
+
+- name: SLAVE | Setting up a zone file
+  ansible.builtin.template:
+    src: "slave/named.conf.local.j2"
+    dest: "{{ bind_conf }}.local"
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Restart BIND

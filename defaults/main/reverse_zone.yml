@@ -1,0 +1,7 @@
+---
+# [ Reverse zones options ]
+bind_reverse_zones:
+  - zone: "192.168.20"
+    records:
+      - { address: "30", name: "ns1.example.com" }
+      - { address: "31", name: "ns2.example.com" }

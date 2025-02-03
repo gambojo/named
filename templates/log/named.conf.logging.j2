@@ -1,0 +1,21 @@
+# {{ ansible_managed }}
+
+logging {
+        channel named_log {
+                file "{{ bind_log }}" versions 10 size 20m;
+                severity {{ bind_log_level }};
+                print-category yes;
+                print-severity yes;
+                print-time yes;
+        };
+
+        category queries { named_log; };
+        category default { named_log; };
+        category config { named_log; };
+        category security { named_log; };
+        category xfer-out { named_log; };
+        category xfer-in { named_log; };
+        category notify { named_log; };
+        category lame-servers { named_log; };
+        category dnssec { named_log; };
+};

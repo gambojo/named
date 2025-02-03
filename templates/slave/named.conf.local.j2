@@ -1,0 +1,55 @@
+# {{ ansible_managed }}
+
+# Forward zones
+{% for item in bind_forward_zones %}
+zone "{{ item.zone }}" {
+  type slave;
+  masters {
+{%   if (groups.bind_masters | length) == 1 %}
+  {{ hostvars[groups.bind_masters[0]]['ansible_default_ipv4']['address'] }};
+{%   elif (groups.bind_masters | length) > 1 %}
+{%     for bind_master in groups.bind_masters %}
+  {{ hostvars[bind_master[0]]['ansible_default_ipv4']['address'] }};
+{%     endfor %}
+{% endif %}
+  };
+  file "{{ bind_cache_dir }}/db.{{ item.zone }}";
+};
+
+{% endfor %}
+
+# Reverse zones
+{% for item in bind_reverse_zones %}
+{%   if (item.zone.split('.') | length) == 3 %}
+zone "{{ (item.zone | ansible.utils.ipaddr('revdns')).split('.')[1:] | join('.') }}" {
+  type slave;
+  masters {
+{%     for bind_master in groups.bind_masters %}
+    {{ bind_master }};
+{%     endfor %}
+  };
+  file "{{ bind_cache_dir }}/db.{{ (item.zone | ansible.utils.ipaddr('revdns')).split('.')[1:] | join('.') }}";
+};
+{%   elif (item.zone.split('.') | length) == 2 %}
+zone "{{ (item.zone | ansible.utils.ipaddr('revdns')).split('.')[2:] | join('.') }}" {
+  type slave;
+  masters {
+{%     for bind_master in groups.bind_masters %}
+    {{ bind_master }};
+{%     endfor %}
+  };
+  file "{{ bind_cache_dir }}/db.{{ (item.zone | ansible.utils.ipaddr('revdns')).split('.')[2:] | join('.') }}";
+};
+{%   elif (item.zone.split('.') | length) == 2 %}
+zone "{{ (item.zone | ansible.utils.ipaddr('revdns')).split('.')[3:] | join('.') }}" {
+  type slave;
+  masters {
+{%     for bind_master in groups.bind_masters %}
+    {{ bind_master }};
+{%     endfor %}
+  };
+  file "{{ bind_cache_dir }}/db.{{ (item.zone | ansible.utils.ipaddr('revdns')).split('.')[3:] | join('.') }}";
+};
+{%   endif %}
+
+{% endfor %}
