@@ -26,15 +26,15 @@
 
 ## The installation of only the master
 ```
-[bind_masters]
+[named_masters]
 192.168.10.10
 ```
 ## Installation of the master and replica
 ```
-[bind_masters]
+[named_masters]
 192.168.10.10
 
-[bind_slaves]
+[named_slaves]
 192.168.10.11
 192.168.10.12
 ```
