@@ -4,7 +4,10 @@ named_service: "named"
 named_pri_domain_name: "example.com"
 named_self_log: true
 named_log_level: "info"
-named_package: bind9
+named_packages:
+  - bind9
+named_python_requirements:
+  - python3-packaging
 named_forwarders:
   - 8.8.8.8
   - 8.8.4.4

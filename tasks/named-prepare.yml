@@ -15,12 +15,8 @@
 
 - name: named-prepare | Install named server
   ansible.builtin.apt:
-    name: "{{ _named_packages }}"
+    name: "{{ named_packages }}"
     update_cache: true
-  vars:
-    _named_packages:
-      - python3-netaddr
-      - "{{ named_package }}"
 
 - name: named-prepare | Started named server
   ansible.builtin.service:
