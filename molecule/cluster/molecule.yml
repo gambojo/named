@@ -1,0 +1,16 @@
+---
+driver:
+  name: docker
+platforms:
+  - name: named-master-node
+    image: alvistack/debian-testing
+    pre_build_image: true
+    groups:
+      - named_masters
+  - name: named-slave-node
+    image: alvistack/debian-testing
+    pre_build_image: true
+    groups:
+      - named_slaves
+verifier:
+  name: testinfra
