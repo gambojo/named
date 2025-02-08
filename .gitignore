@@ -1,0 +1,8 @@
+*.retry
+__pycache__
+.cache
+.molecule
+pytestdebug.log
+.vscode/
+.idea
+zlg.cmd
