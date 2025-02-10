@@ -50,3 +50,7 @@ named_forward_zones:
       - { name: "master", address: "ns1.example.com.", type: "CNAME" }
       - { name: "slave", address: "ns2.example.com.", type: "CNAME" }
 ```
+
+## Requirements
+This role used [ipaddr()](https://docs.ansible.com/ansible/latest/collections/ansible/utils/docsite/filters_ipaddr.html) filter, you need to install the [netaddr](https://pypi.org/project/netaddr/) Python library on a computer on which you use Ansible (it is not required on remote hosts).<br />
+The [ipaddr()](https://docs.ansible.com/ansible/latest/collections/ansible/utils/docsite/filters_ipaddr.html) filter migrated to the [ansible.utils](https://galaxy.ansible.com/ansible/utils) collection. You need to install that collection.
